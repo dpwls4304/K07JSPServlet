@@ -15,6 +15,13 @@
   	<param-name>ConnectionURL</param-name>
   	<param-value>jdbc:oracle:thin:@localhost:1521:orcl</param-value>
   </context-param>
+  
+  <!-- 
+  세션유지시간설정 : 여기서 설정한 시간은 '분'단위
+   -->
+  <session-config>
+  	<session-timeout>10</session-timeout>
+  </session-config>
  
   <!-- 
   해당 웹어플리케이션을 실행했을 때 파일명을 명시하지 않으면
