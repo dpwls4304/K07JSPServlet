@@ -6,6 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Map;
 import java.util.Vector;
+
+import javax.servlet.ServletContext;
+
 import java.util.List;
 
 
@@ -15,7 +18,11 @@ public class BbsDAO {
 	PreparedStatement psmt;
 	ResultSet rs;
 	
-	//인자생성자 : DB연결
+	//인자생성자1 : DB연결
+	/*
+	 JSP파일에서 web.xml에 등록된 컨텍스트 초기화 파라미터를 가져와서
+	 생성자 호출시 파라미터로 전달한다.
+	 */
 	public BbsDAO(String driver, String url) {
 		try {
 			Class.forName(driver);
@@ -27,6 +34,54 @@ public class BbsDAO {
 		catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	//인자생성자2
+	/*
+	 JSP에서는 application내장객체를 파라미터로 전달하고
+	 생성자에서 web.xml에 직접 접근한다. application내장객체는
+	 javax.servlet.ServletContext타입으로 정의되었으므로
+	 메소드 사용시에는 해당 타이븡로 받아야한다.
+	 ※각 내장객체의 타입은 JSP교안 "04.내장객체" 참조할 것.
+	 */
+	public BbsDAO(ServletContext ctx) {
+		try {
+			Class.forName(ctx.getInitParameter("JDBCDriver"));
+			String id = "kosmo";
+			String pw = "1234";
+			con = DriverManager.getConnection(
+					ctx.getInitParameter("ConnectionURL"),id,pw);
+			System.out.println("DB연결성공");
+		}
+		catch(Exception e) {
+			System.out.println("DB연결실패");
+			e.printStackTrace();
+		}
+	}
+	
+	//글쓰기 처리 메소드
+	public int insertWrite(BbsDTO dto) {
+		
+		//실제 입력된 행의 갯수를 저장하기 위한 변수
+		int affected = 0;
+		try {
+			String query = "INSERT INTO board ( "
+					+ " num, title, content, id, Visitcount) "
+					+ " VALUES ( "
+					+ " seq_board_num.NEXTVAL, ?, ?, ?, 0)";
+			
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, dto.getTitle());
+			psmt.setString(2, dto.getContent());
+			psmt.setString(3, dto.getId());
+			
+			affected = psmt.executeUpdate();
+		}
+		catch(Exception e) {
+			System.out.println("insert중 예외발생");
+			e.printStackTrace();
+		}
+		return affected;
 	}
 	
 	//DB자원해제
@@ -50,7 +105,6 @@ public class BbsDAO {
 		//게시물의 수는 0으로 초기화
 		int totalCount = 0;
 		
-		//기본쿼리문(전체레코드를 대상으로 함)
 		String query = "SELECT COUNT(*) FROM board";
 		
 		//JSP페이지에서 검색어를 입력한 경우 WHERE절에서 
@@ -70,6 +124,100 @@ public class BbsDAO {
 		catch(Exception e) {}
 		
 		return totalCount;
+	}
+	
+	//일련번호 num에 해당하는 게시물의 조회수 증가
+	public void updateVisitcount(String num) {
+		String query = "UPDATE board SET "
+				+ " Visitcount=Visitcount+1 "
+				+ " WHERE num=?";
+		System.out.println("조회수증가:" + query);
+		
+		try {
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, num);
+			psmt.executeQuery();
+		}
+		catch(Exception e) {
+			System.out.println("죄회수 증가시 예외발생");
+			e.printStackTrace();
+		}
+	}
+	
+	//일련번호에 해당하는 게시물을 가져와서 DTO객체에 저장후 반환
+	public BbsDTO selectView(String num) {
+		BbsDTO dto = new BbsDTO();
+		
+		//기본쿼리문(전체레코드를 대상으로 함) : member테이블과 join없을 때...
+		/*String query = "SELECT * FROM board WHERE num=?";*/
+		
+		//변경된 쿼리문 : member테이블과 join하여 사용자이름 가져옴.
+				String query = "SELECT B.*, M.name " + 
+						" FROM member M INNER JOIN board B " + 
+						" ON M.id=B.id " + 
+						" WHERE num=?";
+		
+		try {
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, num);
+			rs = psmt.executeQuery();
+			if(rs.next()) {
+				dto.setNum(rs.getString(1));
+				dto.setTitle(rs.getString(2));
+				dto.setContent(rs.getString("content"));
+				dto.setPostDate(rs.getDate("postdate"));
+				dto.setId(rs.getString("id"));
+				dto.setVisitcount(rs.getString(6));
+				//테이블join으로컬럼추가
+				dto.setName(rs.getString("name"));
+			}
+		}
+		catch(Exception e) {
+			System.out.println("상세보기시 예외발생");
+			e.printStackTrace();
+		}
+		return dto;
+	}
+	
+	//게시물 수정하기
+	public int updateEdit(BbsDTO dto) {
+		int affected = 0;
+		try {
+			String query = "UPDATE board SET "
+					+ " title=?, content=? "
+					+ " WHERE num=?";
+			
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, dto.getTitle());
+			psmt.setString(2, dto.getContent());
+			psmt.setString(3, dto.getNum());
+			
+			affected = psmt.executeUpdate();
+		}
+		catch(Exception e) {
+			System.out.println("update중 예외발생");
+			e.printStackTrace();
+		}
+		
+		return affected;
+	}
+	
+	//게시물 삭제 처리
+	public int delete(BbsDTO dto) {
+		int affected = 0;
+		try {
+			String query = "DELETE FROM board WHERE num=?";
+			
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, dto.getNum());
+			
+			affected = psmt.executeUpdate();
+		}
+		catch(Exception e) {
+			System.out.println("delete중 예외발생");
+			e.printStackTrace();
+		}
+		return affected;
 	}
 	
 	/*
@@ -104,7 +252,7 @@ public class BbsDAO {
 				dto.setContent(rs.getString(3));
 				dto.setPostDate(rs.getDate("postdate"));
 				dto.setId(rs.getString("id"));
-				dto.setVisitCount(rs.getString(6));
+				dto.setVisitcount(rs.getString(6));
 				
 				//저장된 DTO객체를 List컬렉션에 추가
 				bbs.add(dto);

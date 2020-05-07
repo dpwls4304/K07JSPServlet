@@ -1,8 +1,22 @@
+<%@page import="model.BbsDTO"%>
+<%@page import="model.BbsDAO"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
     
-<%--글작성 페이지 진입전 로그인 체크하기 --%>
+<%--글 수정 페이지 진입전 로그인 체크하기 --%>
 <%@include file = "../common/isLogin.jsp" %>
+
+<%
+//폼값받기 - 파라미터로 전달된 게시물의 일련변호
+String num = request.getParameter("num");
+BbsDAO dao = new BbsDAO(application);
+
+//게시물을 가져와서 DTO객체로 반환
+BbsDTO dto = dao.selectView(num);
+
+dao.close();
+%>
+
 <!DOCTYPE html>
 <html lang="en">
 <jsp:include page="../common/boardHead.jsp" />
@@ -12,7 +26,7 @@
 	<div class="row">		
 		<jsp:include page="../common/boardLeft.jsp" />
 		<div class="col-9 pt-3">
-			<h3>게시판 - <small>Write(작성)</small></h3>
+			<h3>게시판 - <small>Edit(수정)</small></h3>
 <script>
 //---------------선생님 풀이---------
 //일반적으로 폼값을 체크할 때는 get계열의 함수는 쓰지 않는다. 복잡하기 때문이다.
@@ -51,8 +65,14 @@ function checkValidate(frm) {
 						
 			<div class="row mt-3 mr-1">
 				<table class="table table-bordered table-striped">
-				<form name="writeFrm" method="post" action="WriteProc.jsp"
+				<form name="writeFrm" method="post" action="EditProc.jsp"
 					onsubmit="return checkValidate(this);">
+					
+				<!-- 해당 게시물의 일련번호를 전송해야 수정이 가능하다. 
+					hidden속성으로 처리하면 화면에서는 사라지지만 서버로는 값을
+					전송할 수 있다. -->
+				<input type="hidden" name="num" value="<%=dto.getNum() %>" />
+					
 				<colgroup>
 					<col width="20%"/>
 					<col width="*"/>
@@ -76,7 +96,8 @@ function checkValidate(frm) {
 						<th class="text-center"
 							style="vertical-align:middle;">제목</th>
 						<td>
-							<input type="text" class="form-control" name="title" />
+							<input type="text" class="form-control" 
+								name="title" value="<%=dto.getTitle() %>" />
 						</td>
 					</tr>
 					<tr>
@@ -84,7 +105,7 @@ function checkValidate(frm) {
 							style="vertical-align:middle;">내용</th>
 						<td>
 							<textarea rows="10" 
-								class="form-control" name="content"></textarea>
+								class="form-control" name="content"><%=dto.getContent() %></textarea>
 						</td>
 					</tr>
 					<!-- <tr>
