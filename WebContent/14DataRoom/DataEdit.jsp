@@ -11,7 +11,7 @@
 	<div class="row">		
 		<jsp:include page="../common/boardLeft.jsp" />
 		<div class="col-9 pt-3">
-			<h3>자료실 - <small>Password(패스워드 검증))</small></h3>
+			<h3>자료실 - <small>Edit(수정)</small></h3>
 <script>
 //---------------선생님 풀이---------
 //일반적으로 폼값을 체크할 때는 get계열의 함수는 쓰지 않는다. 복잡하기 때문이다.
@@ -36,9 +36,24 @@
 //--------------------------------
 function checkValidate(frm) {
 	
+	if(frm.name.value=="") {
+		alert("이름을 입력하세요");
+		frm.name.focus();
+		return false;
+	}
 	if(frm.pass.value=="") {
 		alert("비밀번호를 입력하세요");
 		frm.pass.focus();
+		return false;
+	}
+	if(frm.title.value=="") {
+		alert("제목을 입력해주세요.");
+		frm.title.focus();
+		return false;
+	}
+	if(frm.content.value.length < 5) {
+		alert("내용은 5글자 이상이어야 합니다.");
+		frm.content.focus();
 		return false;
 	}
 }
@@ -46,31 +61,66 @@ function checkValidate(frm) {
 						
 			<div class="row mt-3 mr-1">
 				<table class="table table-bordered table-striped">
-				
 				<!-- 
-					패스워드 검증폼은 첨부파일을 전송하지 않으므로 enctype선언부분을
-					삭제해야한다.
+					파일 업로드를 위해서는 반드시 enctype을 선언해야 한다. 그렇지
+					않으면 파일은서버로 전송되지 않는다.
 				 -->
-				<form name="writeFrm" method="post" action="../DataRoom/DataPassword"
+				<form name="writeFrm" method="post" action="../DataRoom/DataEdit"
+					enctype="multipart/form-data"
 					onsubmit="return checkValidate(this);">
 				
-				<!-- 패스워드 검증을 위해 idx, mode는 서버로 전송해야 하므로
-					hidden폼에 값을 저장한다. -->
-				<input type="hidden" name="idx" value="${param.idx }" />	
-				<input type="hidden" name="mode" value="${mode }" />	
-				<input type="hidden" name="nowPage" value="" />	
-				
+				<input type="hidden" name="idx" value="${dto.idx }" />
+				<input type="hidden" name="nowPage" value="${param.nowPage }" />
+				<!-- 
+					기존에 등록한 파일이 있는경우 수정시 파일을 첨부하지 않으면 기존파일을
+					유지해야 하므로 별도의 hidden폼이 필요하다.
+					즉 새로운 파일을 등록하면 새로운값으로 업데이트하고,
+					파일을 등록하지 않으면 기존파일명으로 데이터를 유지하게 된다.
+				 -->
+				<input type="hidden" name="originalfile" value="${dto.attachedfile }" />
+					
 				<colgroup>
 					<col width="20%"/>
 					<col width="*"/>
 				</colgroup>
 				<tbody>
 					<tr>
+						<th class="text-center align-middle">작성자</th>
+						<td>
+							<input type="text" class="form-control"	style="width:100px;"
+								name="name" value="${dto.name }" />
+						</td>
+					</tr>
+					<tr>
 						<th class="text-center" 
 							style="vertical-align:middle;">패스워드</th>
 						<td>
 							<input type="password" class="form-control" style="width:200px;" 
-								name="pass"/>
+								name="pass" value="${dto.pass }" />
+						</td>
+					</tr>
+					<tr>
+						<th class="text-center"
+							style="vertical-align:middle;">제목</th>
+						<td>
+							<input type="text" class="form-control" name="title"
+								value="${dto.title }" />
+						</td>
+					</tr>
+					<tr>
+						<th class="text-center"
+							style="vertical-align:middle;">내용</th>
+						<td>
+							<textarea rows="10" 
+								class="form-control" name="content" >${dto.content }</textarea>
+						</td>
+					</tr>
+					<tr>
+						<th class="text-center"
+							style="vertical-align:middle;">첨부파일</th>
+						<td>
+							파일명 : ${dto.attachedfile }<br />
+							<input type="file" class="form-control" name="attachedfile" />
 						</td>
 					</tr>
 				</tbody>
@@ -78,18 +128,10 @@ function checkValidate(frm) {
 			</div>
 			<div class="row mb-3">
 				<div class="col text-right">
-					<!-- 각종 버튼 부분 -->
-					<!-- <button type="button" class="btn">Basic</button> -->
-					<!-- <button type="button" class="btn btn-primary" 
-						onclick="location.href='BoardWrite.jsp';">글쓰기</button> -->
-					<!-- <button type="button" class="btn btn-secondary">수정하기</button>
-					<button type="button" class="btn btn-success">삭제하기</button>
-					<button type="button" class="btn btn-info">답글쓰기</button>
-					<button type="button" class="btn btn-light">Light</button>
-					<button type="button" class="btn btn-link">Link</button> -->
-					<button type="submit" class="btn btn-danger">전송하기</button>
+					<button type="submit" class="btn btn-danger">작성완료</button>
 					<button type="reset" class="btn btn-dark">Reset</button>
-					<button type="button" class="btn btn-warning" onclick="location.href='../DataRoom/DataList?nowPage=${param.nowPage }&searchColumn=${param.searchColumn }&searchWord=${param.searchWord }';">리스트보기</button>
+					<button type="button" class="btn btn-warning"
+						onclick="location.href='../DataRoom/DataList?nowPage=${param.nowPage}';">리스트바로가기</button>
 				</div>
 				</form>
 			</div>

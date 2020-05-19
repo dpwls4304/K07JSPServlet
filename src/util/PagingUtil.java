@@ -47,57 +47,89 @@ public class PagingUtil {
 		return pagingStr;
 	}
 	
-	
 	public static String pagingBS4(int totalRecordCount,
 			int pageSize, int blockPage, int nowPage, String pageName) {
 		
+      
 		String pagingStr = "";
-		
+	  
 		int totalPage = 
 				(int)(Math.ceil(((double)totalRecordCount/pageSize)));
-		
-		int intTemp = (((nowPage-1) / blockPage) * blockPage) + 1;
-		
+		System.err.println("totalPage: "+totalPage);
+	  
+		int intTemp = (((nowPage-1) / blockPage) * blockPage) +1;
+		System.err.println("intTemp: "+intTemp);
+	  
+		/*
+	  	변경전 페이지블록의 버튼이다.
+	     	<li class="page-item">
+	        <a href="#" class="page-link">
+	           <i class="fas fa-angle-double-left"></i>
+	        </a>
+	     	</li>
+		*/
 		if(intTemp != 1) {
-			
-			/*<li class="page-item">
-			<a href="#" class="page-link">
-				<i class="fas fa-angle-double-left"></i>
-			</a>
-			</li>*/
-			
-			pagingStr += ""
-					+ "<a href='"+pageName+"nowPage=1'>"
-					+ "<img src='../images/paging1.gif'></a>";
-			pagingStr += "&nbsp;";
-			pagingStr += ""
-					+ "<a href='"+pageName+"nowPage="+
-									(intTemp-blockPage)+"'>"
-					+ "<img src='../images/paging2.gif'></a>";
+	
+	    //첫패이지로
+	    pagingStr += ""
+			+ "<li class='page-item'>"
+			+    "<a href='"+pageName+"nowPage=1' class='page-link'>"
+			+       "<i class='fas fa-angle-double-left'></i>"
+			+    "</a>"
+			+ "</li>";
+	    //이전블록으로
+	    pagingStr += ""
+			+ "<li class='page-item'>"
+			+    "<a href='"+pageName+"nowPage="+(intTemp-1)+"' class='page-link'>"
+			+       "<i class='fas fa-angle-left'></i>"
+			+    "</a>"
+			+ "</li>";
 		}
+	  
+		int blockCount =1;
+	  
+		while(blockCount<=blockPage && intTemp<=totalPage) {
+	     
+	    //페이지 바로가기
+	    if(intTemp==nowPage) {
+	    	//현제페이지인 경우
+	    	pagingStr += ""
+	        + "<li class='page-item active'>"
+	        +    "<a href='#' class='page-link'>"+intTemp+"</a>"
+	        + "</li>";
+	    }
+	    else {
+	    	//현재페이지가 아닌경우
+	    	pagingStr += ""
+			+ "<li class='page-item'>"
+			+    "<a href='"+pageName+"nowPage="+intTemp+"' class='page-link'>"
+			+      intTemp
+			+   "</a>"
+			+ "</li>";
+	    }
+	    
+	    intTemp++;
+	    blockCount++;
 		
-		int blockCount = 1;
-		while(blockCount <= blockPage && intTemp<=totalPage) {
-			if(intTemp==nowPage) {
-				pagingStr += "&nbsp;" + intTemp + "&nbsp;";
-			}
-			else {
-				pagingStr += "&nbsp;<a href='"+pageName
-						+"nowPage="+intTemp+"'>"+
-						intTemp+"</a>&nbsp;";
-			}
-			intTemp++;
-			blockCount++;
 		}
+	  
 		if(intTemp <= totalPage) {
-			pagingStr += "<a href='"+pageName+"nowPage="+
-												intTemp+"'>"
-					+ "<img src='../images/paging3.gif'></a>";
-			pagingStr += "&nbsp;";
-			pagingStr += "<a href='"+pageName+"nowPage="+
-											totalPage+"'>"
-					+ "<img src='../images/paging4.gif'></a>";
-		}
+	    //다음페이지 블록으로
+	    pagingStr += ""
+			+ "<li class='page-item'>"
+			+    "<a href='"+pageName+"nowPage="+intTemp+"' class='page-link'>"
+			+       "<i class='fas fa-angle-right'></i>"
+			+    "</a>"
+			+ "</li>";
+	     
+	    //마지막페이지로
+	    pagingStr += ""
+			+ "<li class='page-item'>"
+			+    "<a href='"+pageName+"nowPage="+totalPage+"' class='page-link'>"
+			+       "<i class='fas fa-angle-double-right'></i>"
+			+    "</a>"
+			+ "</li>";
+	    }  
 		return pagingStr;
 	}
 }
